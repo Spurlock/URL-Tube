@@ -6,6 +6,7 @@ Using just the URL from a YouTube video, this plugin can create video embeds and
 ///////////////
 EMBEDDING VIDEO
 ///////////////
+
 Just use the following tag, and pass the URL of the Youtube video as "src". You can use the shortened Share URL or a full YouTube video page URL:
 		
 {exp:url_tube src="http://youtu.be/nU_cOAutCcs"}
