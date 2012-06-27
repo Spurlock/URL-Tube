@@ -40,3 +40,11 @@ If all you want is to extract the Video's ID, just use the ID tag (height and wi
 {exp:url_tube:id src="http://youtu.be/nU_cOAutCcs"}
 
 The above code will simply output "nU_cOAutCcs"
+
+////////
+STYLING
+////////
+		
+You can assign class and id attributes to the iframe (when embedding video) or image (when creating thumbnails) using the "class" and/or "id" parameters:
+		
+{exp:url_tube src="http://youtu.be/nU_cOAutCcs" class="small" id="main_vid"}
