@@ -33,8 +33,16 @@ class URL_tube {
 			$h = $dims['height'];
 			$w = $dims['width'];		
 			
-			//Output embed code
-			$this->return_data = "<iframe width='$w' height='$h' src='http://www.youtube.com/embed/$v' frameborder='0' allowfullscreen></iframe>";
+			//Validate and add class and id attributes
+			$class = $this->EE->TMPL->fetch_param('class');
+			$id = $this->EE->TMPL->fetch_param('id');
+			$selectors = "";
+			if($id && preg_match("/-?[_a-zA-Z]+[_a-zA-Z0-9-]*/",$id))
+				$selectors .= "id='$id' ";
+			if($class && preg_match("/-?[_a-zA-Z]+[_a-zA-Z0-9-]*/",$class))
+				$selectors .= "class='$class' ";
+			
+			$this->return_data = "<iframe width='$w' height='$h' $selectors src='http://www.youtube.com/embed/$v' frameborder='0' allowfullscreen></iframe>";
 		}
 	}
 	
@@ -101,9 +109,8 @@ class URL_tube {
 			parse_str($segs['query'], $query);
 			$vid = $query['v'];
 		}
-		
 		//Validate and return Video ID
-		if($vid && ereg("^[a-zA-Z0-9_-]{11}$",$vid))
+		if($vid && preg_match('/^[a-zA-Z0-9_\-]{11}$/',$vid))
 			return $vid;
 		return false;
 	}
