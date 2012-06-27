@@ -28,25 +28,78 @@ class URL_tube {
 		
 		if($v = $this->getVideoID($src))
 		{
-			//Set video dimensions
+			//Set video dimensions and selector attributes
 			$dims = $this->getDimensions($this->EE->TMPL->fetch_param('width'),$this->EE->TMPL->fetch_param('height'));
 			$h = $dims['height'];
-			$w = $dims['width'];		
+			$w = $dims['width'];
+			$sel = $this->makeSelectorString();
 			
-			//Validate and add class and id attributes
-			$class = $this->EE->TMPL->fetch_param('class');
-			$id = $this->EE->TMPL->fetch_param('id');
-			$selectors = "";
-			if($id && preg_match("/-?[_a-zA-Z]+[_a-zA-Z0-9-]*/",$id))
-				$selectors .= "id='$id' ";
-			if($class && preg_match("/-?[_a-zA-Z]+[_a-zA-Z0-9-]*/",$class))
-				$selectors .= "class='$class' ";
-			
-			$this->return_data = "<iframe width='$w' height='$h' $selectors src='http://www.youtube.com/embed/$v' frameborder='0' allowfullscreen></iframe>";
+			$this->return_data = "<iframe width='$w' height='$h' $sel src='http://www.youtube.com/embed/$v' frameborder='0' allowfullscreen></iframe>";
 		}
 	}
 	
-	function getDimensions($w,$h)
+	//Conveneince function for getting Video ID from template
+	function id()
+	{
+		$s = $this->EE->TMPL->fetch_param('src');
+		return $this->getVideoID($s);
+	}
+	
+	//Generates a thumbnail image for the video
+	function thumbnail()
+	{
+		$s = $this->EE->TMPL->fetch_param('src');
+		$vid = $this->getVideoID($s);
+		$dims = $this->getDimensions($this->EE->TMPL->fetch_param('width'),$this->EE->TMPL->fetch_param('height'));
+		$h = $dims['height'];
+		$w = $dims['width'];
+		$sel = $this->makeSelectorString();
+		
+		return "<img src='http://img.youtube.com/vi/$vid/0.jpg' alt='Video Thumbnail' $sel height='$h' width='$w'/>";
+	}
+	
+	//Fetch the Video ID from any Youtube URL
+	private function getVideoID($str)
+	{
+		$segs = parse_url($str);		
+		if(!isset($segs['host'])) //Die if there is no host in passed URL.
+			return false;
+			
+		$host = $segs['host'];					
+		$vid = NULL;
+		
+		if($host=='youtu.be' && isset($segs['path'])) //Extract from share URL
+		{
+			$vid = substr($segs['path'],1);
+		}
+		else if(($host=='youtube.com' || $host=='www.youtube.com') && isset($segs['query'])) //Extract from full URL
+		{
+			parse_str($segs['query'], $query);
+			$vid = $query['v'];
+		}
+		//Validate and return Video ID
+		if($vid && preg_match('/^[a-zA-Z0-9_\-]{11}$/',$vid))
+			return $vid;
+		return false;
+	}
+	
+	//Validate class and id attributes, return them in a string to be used on an html element
+	private function makeSelectorString()
+	{
+		$class = $this->EE->TMPL->fetch_param('class');
+		$id = $this->EE->TMPL->fetch_param('id');
+		
+		$selectors = "";
+		if($id && preg_match("/-?[_a-zA-Z]+[_a-zA-Z0-9-]*/",$id))
+			$selectors .= "id='$id' ";
+		if($class && preg_match("/-?[_a-zA-Z]+[_a-zA-Z0-9-]*/",$class))
+			$selectors .= "class='$class' ";
+			
+		return $selectors;
+	}
+	
+	//Given some combination of set or unset height and width, determine the output dimensions
+	private function getDimensions($w,$h)
 	{
 		if($h && $w) //Height and width both set
 		{
@@ -71,49 +124,6 @@ class URL_tube {
 		return array("width"=>$w,"height"=>$h);
 	}
 	
-	//Conveneince function for getting Video ID from template
-	function id()
-	{
-		$s = $this->EE->TMPL->fetch_param('src');
-		return $this->getVideoID($s);
-	}
-	
-	//Generates a thumbnail image for the video
-	function thumbnail()
-	{
-		$s = $this->EE->TMPL->fetch_param('src');
-		$vid = $this->getVideoID($s);
-		$dims = $this->getDimensions($this->EE->TMPL->fetch_param('width'),$this->EE->TMPL->fetch_param('height'));
-		$h = $dims['height'];
-		$w = $dims['width'];
-		
-		return "<img src='http://img.youtube.com/vi/$vid/0.jpg' alt='Video Thumbnail' height='$h' width='$w'/>";
-	}
-	
-	//Fetch the Video ID from any Youtube URL
-	function getVideoID($str)
-	{
-		$segs = parse_url($str);		
-		if(!isset($segs['host'])) //Die if there is no host in passed URL.
-			return false;
-			
-		$host = $segs['host'];					
-		$vid = NULL;
-		
-		if($host=='youtu.be' && isset($segs['path'])) //Extract from share URL
-		{
-			$vid = substr($segs['path'],1);
-		}
-		else if(($host=='youtube.com' || $host=='www.youtube.com') && isset($segs['query'])) //Extract from full URL
-		{
-			parse_str($segs['query'], $query);
-			$vid = $query['v'];
-		}
-		//Validate and return Video ID
-		if($vid && preg_match('/^[a-zA-Z0-9_\-]{11}$/',$vid))
-			return $vid;
-		return false;
-	}
 	
 	/**
 	 * Usage
@@ -165,6 +175,14 @@ class URL_tube {
 		
 		The above code will simply output "nU_cOAutCcs"
 
+		////////
+		STYLING
+		////////
+		
+		You can assign class and id attributes to the iframe (when embedding video) or image (when creating thumbnails) using the "class" and/or "id" parameters:
+		
+		{exp:url_tube src="http://youtu.be/nU_cOAutCcs" class="small" id="main_vid"}
+		
 		<?php
 		$buffer = ob_get_contents();
 	
