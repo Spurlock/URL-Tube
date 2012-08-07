@@ -72,10 +72,18 @@ class URL_tube {
 		{
 			$vid = substr($segs['path'],1);
 		}
-		else if(($host=='youtube.com' || $host=='www.youtube.com') && isset($segs['query'])) //Extract from full URL
+		else if(($host=='youtube.com' || $host=='www.youtube.com')) //Extract from full URL
 		{
-			parse_str($segs['query'], $query);
-			$vid = $query['v'];
+			if(isset($segs['query']))
+			{
+				parse_str($segs['query'], $query);
+				$vid = $query['v'];
+			}
+			else //Extract from /embed URL
+			{
+				$embedloc = strpos($segs['path'],"embed/");
+				$vid = substr($segs['path'],$embedloc+6);
+			}
 		}
 		//Validate and return Video ID
 		if($vid && preg_match('/^[a-zA-Z0-9_\-]{11}$/',$vid))
