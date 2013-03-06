@@ -3,7 +3,7 @@
 
 $plugin_info = array(
 						'pi_name'			=> 'URL Tube',
-						'pi_version'		=> '1.1',
+						'pi_version'		=> '1.2',
 						'pi_author'			=> 'Mark Spurlock',
 						'pi_author_url'		=> 'https://github.com/Spurlock',
 						'pi_description'	=> 'Using just the URL from a YouTube or Vimeo video, this plugin can create video embeds and thumbnails, of whatever size you like, for use in your templates.',
@@ -26,30 +26,34 @@ class URL_tube {
 		$this->EE =& get_instance();
 		$src = $this->EE->TMPL->fetch_param('src');
 		
-		if ($v = $this->getVideoID($src)) {
+		if ($video_id = $this->getVideoID($src)) {
 			
 			//Set video dimensions and selector attributes
-			$dims = $this->getDimensions($this->EE->TMPL->fetch_param('width'),$this->EE->TMPL->fetch_param('height'));
-			$h = $dims['height'];
-			$w = $dims['width'];
+			list($w, $h) = $this->getDimensions( $this->EE->TMPL->fetch_param('width'), $this->EE->TMPL->fetch_param('height') );
 			$sel = $this->makeSelectorString();
 			$site = $this->getVideoSite($src);
+			$query_string  = $this->getQueryString($site);
 			
-			if ($site=='youtube')
-				$this->return_data = "<iframe width='$w' height='$h' $sel src='http://www.youtube.com/embed/$v' frameborder='0' allowfullscreen></iframe>";
-			else if ($site=='vimeo')
-				$this->return_data = "<iframe src='http://player.vimeo.com/video/$v' width='$w' height='$h' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>";
+			if ($site=='youtube') {
+				$this->return_data = "<iframe width='$w' height='$h' $sel src='http://www.youtube.com/embed/$video_id$query_string' frameborder='0' allowfullscreen></iframe>";
+			} else if ($site=='vimeo') {
+				$this->return_data = "<iframe src='http://player.vimeo.com/video/$video_id$query_string' width='$w' height='$h' frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>";
+			}
 		}
 	}
 	
-	//Conveneince function for getting Video ID from template
+	/**
+	* Conveneince function for getting Video ID from template
+	*/
 	function id()
 	{
 		$s = $this->EE->TMPL->fetch_param('src');
 		return $this->getVideoID($s);
 	}
 	
-	//Generates a thumbnail image for the video (YouTube only)
+	/**
+	* Generates a thumbnail image for the video (YouTube only)
+	*/
 	function thumbnail()
 	{
 		$s = $this->EE->TMPL->fetch_param('src');
@@ -57,14 +61,15 @@ class URL_tube {
 			return;
 			
 		$vid = $this->getVideoID($s);
-		$dims = $this->getDimensions($this->EE->TMPL->fetch_param('width'), $this->EE->TMPL->fetch_param('height'));
-		$h = $dims['height'];
-		$w = $dims['width'];
+		list($w, $h) = $this->getDimensions($this->EE->TMPL->fetch_param('width'), $this->EE->TMPL->fetch_param('height'));
 		$sel = $this->makeSelectorString();
 		
 		return "<img src='http://img.youtube.com/vi/$vid/0.jpg' alt='Video Thumbnail' $sel height='$h' width='$w'/>";
 	}
 	
+	/**
+	* Retrieves the host from the video URL
+	*/
 	private function getVideoHost($src)
 	{
 		$segs = parse_url($src);		
@@ -74,6 +79,9 @@ class URL_tube {
 		return $segs['host'];	
 	}
 	
+	/**
+	* Gets video site from video URL
+	*/
 	private function getVideoSite($src)
 	{
 		$youtube_hosts	= array('youtube.com', 'www.youtube.com', 'youtu.be');
@@ -90,12 +98,14 @@ class URL_tube {
 		}
 	}
 	
-	//Fetch the Video ID from any Youtube/Vimeo URL
+	/**
+	* Fetch the Video ID from any Youtube/Vimeo URL
+	*/
 	private function getVideoID($src)
 	{
 		$site = $this->getVideoSite($src);
 		$segs = parse_url($src);		
-		if(!isset($segs['host'])) //Die if there is no host in passed URL.
+		if(empty($segs['host'])) //Die if there is no host in passed URL.
 			return false;
 			
 		$host = $segs['host'];
@@ -105,9 +115,8 @@ class URL_tube {
 		if ($site=='youtube') {
 			if ($host=='youtu.be' && $path) {
 				//Extract from share URL
-				$vid = substr($path,1);
+				$vid = substr($path, 1);
 			} else if (($host=='youtube.com' || $host=='www.youtube.com')) {
-				
 				
 				if (isset($segs['query'])) {
 					//Extract from full URL
@@ -115,8 +124,8 @@ class URL_tube {
 					$vid = $query['v'];
 				} else {
 					//Extract from embed URL
-					$embedloc = strpos($path,"embed/");
-					$vid = substr($path,$embedloc+6);
+					$embedloc = strpos($path, "embed/");
+					$vid = substr($path, $embedloc+6);
 				}
 			}
 			
@@ -133,11 +142,10 @@ class URL_tube {
 			$id_started = false; //flag is set when we start finding numeric characters
 			
 			foreach($chars as $char) {
-				if(preg_match('/^[0-9]{1}$/',$char)) {
-					if($id_started) {
+				if (preg_match('/^[0-9]{1}$/', $char)) {
+					if ($id_started) {
 						$vid .= $char;
-					}
-					else {
+					} else {
 						$vid = $char;
 						$id_started = true;
 					}
@@ -152,11 +160,42 @@ class URL_tube {
 				return false;
 			}
 		}
-		
-		
 	}
 	
-	//Validate class and id attributes, return them in a string to be used on an html element
+	/**
+	* Returns a query string of all embed params that were passed through template, to be appended to embed src
+	*/
+	private function getQueryString($site)
+	{
+		//whitelist all supported attributes
+		$valid_attrs = array();
+		if ($site=='youtube') {
+			
+			$valid_attrs = array('autohide', 'autoplay', 'cc_load_policy', 'color', 'controls', 'disablekb', 'enablejsapi', 'end', 'fs', 
+			'iv_load_policy', 'list', 'listType', 'loop', 'modestbranding', 'origin', 'playerapiid', 'playlist', 'rel', 'showinfo', 'start', 'theme');
+			
+		} elseif ($site=='vimeo') {
+			
+			$valid_attrs = array('title','byline','portrait','color','autoplay','loop','api','player_id');
+			
+		}
+		
+		//loop through supported attributes, appending all the ones actually used to a query string
+		$query_string = '?';
+		foreach ($valid_attrs as $attr) {
+			$value = $this->EE->TMPL->fetch_param($attr);
+			if (strlen($value)) {
+				$query_string.= $attr.'='.$value.'&';
+			}
+		}
+		$query_string = substr($query_string , 0, -1); //remove last character (which will be either '?' or '&')
+		
+		return $query_string;
+	}
+	
+	/**
+	* Validate class and id attributes, return them in a string to be used on an html element
+	*/
 	private function makeSelectorString()
 	{
 		$class = $this->EE->TMPL->fetch_param('class');
@@ -171,10 +210,12 @@ class URL_tube {
 		return $selectors;
 	}
 	
-	//Given some combination of set or unset height and width, determine the output dimensions
+	/**
+	* Given some combination of set or unset height and width, determine the output dimensions
+	*/
 	private function getDimensions($w,$h)
 	{
-		if($h && $w) {
+		if ($h && $w) {
 			//Height and width both set
 			$h = intval($h);
 			$w = intval($w);
@@ -182,8 +223,7 @@ class URL_tube {
 			//Height set, calculate width
 			$h = intval($h);
 			$w = ceil($h * 16/9);
-		}
-		else if($w) {
+		} else if($w) {
 			//Width set, calculate height
 			$w = intval($w);
 			$h = ceil($w * 9/16);
@@ -192,7 +232,7 @@ class URL_tube {
 			$w = 560;
 			$h = 315;
 		}
-		return array("width"=>$w,"height"=>$h);
+		return array($w, $h);
 	}
 	
 	
@@ -256,6 +296,22 @@ class URL_tube {
 		You can assign class and id attributes to the iframe (when embedding video) or image (when creating thumbnails) using the "class" and/or "id" parameters:
 		
 		{exp:url_tube src="http://youtu.be/nU_cOAutCcs" class="small" id="main_vid"}
+		
+		*************
+		EMBED OPTIONS
+		*************
+		
+		YouTube and Vimeo each support a set of options that can be added to the embedded video. For example, YouTube videos typically display "related videos" at 
+		the end of your clip, but this behavior can be turned off by adding "?rel=0" to the "src" attribute. To use these options with URL Tube, simply pass them 
+		in as parameters to your url_tube tag:
+		
+		{exp:url_tube src="http://youtu.be/nU_cOAutCcs" rel="0" theme="light"}
+		
+		Note that Vimeo and YouTube support different sets of options, with only a small number that will work for both providers (also, both providers have a "color" 
+		option, but they use it differently from one another). URL Tube will safely ignore any parameters that don't apply for the video's provider.
+		
+		List of YouTube parameters: https://developers.google.com/youtube/player_parameters
+		List of Vimeo parameters: http://developer.vimeo.com/player/embedding
 		
 		<?php
 		$buffer = ob_get_contents();

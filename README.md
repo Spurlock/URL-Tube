@@ -50,3 +50,19 @@ STYLING
 You can assign class and id attributes to the iframe (when embedding video) or image (when creating thumbnails) using the "class" and/or "id" parameters:
 		
 {exp:url_tube src="http://youtu.be/nU_cOAutCcs" class="small" id="main_vid"}
+
+*************
+EMBED OPTIONS
+*************
+
+YouTube and Vimeo each support a set of options that can be added to the embedded video. For example, YouTube videos typically display "related videos" at 
+the end of your clip, but this behavior can be turned off by adding "?rel=0" to the "src" attribute. To use these options with URL Tube, simply pass them 
+in as parameters to your url_tube tag:
+
+{exp:url_tube src="http://youtu.be/nU_cOAutCcs" rel="0" theme="light"}
+
+Note that Vimeo and YouTube support different sets of options, with only a small number that will work for both providers (also, both providers have a "color" 
+option, but they use it differently from one another). URL Tube will safely ignore any parameters that don't apply for the video's provider.
+
+List of YouTube parameters: https://developers.google.com/youtube/player_parameters
+List of Vimeo parameters: http://developer.vimeo.com/player/embedding
