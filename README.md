@@ -52,6 +52,16 @@ You can assign class and id attributes to the iframe (when embedding video) or i
 {exp:url_tube src="http://youtu.be/nU_cOAutCcs" class="small" id="main_vid"}
 
 *************
+HTTPS SUPPORT
+*************
+        
+URL Tube will work with http and https protocols. By default, it will use whichever protocol is passed in the "src" parameter (and default to http 
+if it doesn't find one). If you want to force URL tube to always use one or the other, you can do so using the "ssl" parameter. For example, the 
+following tag will embed the video using https, even though http was given in the URL:
+        
+{exp:url_tube src="http://youtu.be/nU_cOAutCcs" ssl="yes"}
+
+*************
 EMBED OPTIONS
 *************
 
