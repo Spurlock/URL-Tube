@@ -66,14 +66,28 @@ class URL_tube {
     function thumbnail() 
     {
         $s = $this->EE->TMPL->fetch_param('src');
-        if ($this->getVideoSite($s) != 'youtube')
-            return;
 
         $vid = $this->getVideoID($s);
         list($w, $h) = $this->getDimensions($this->EE->TMPL->fetch_param('width'), $this->EE->TMPL->fetch_param('height'));
         $sel = $this->makeSelectorString();
 
-        return "<img src='http://img.youtube.com/vi/$vid/0.jpg' alt='Video Thumbnail' $sel height='$h' width='$w'/>";
+		$url = "";
+		switch ($this->getVideoSite($s))
+		{
+			case 'youtube':
+				$url = "http://img.youtube.com/vi/$vid/0.jpg";
+				break;
+			case 'vimeo':
+				if ($contents = @file_get_contents("http://vimeo.com/api/v2/video/$vid.php"))
+				{
+					$array = @unserialize(trim($contents));
+					if (isset($array[0])) $url = $array[0]['thumbnail_large'];
+					// could also get thumbnail_small or thumbnail_medium
+				}
+				break;
+		}
+		if (empty($url)) return;
+        return "<img src='$url' alt='Video Thumbnail' $sel height='$h' width='$w'/>";
     }
     
     /**
