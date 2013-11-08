@@ -61,19 +61,40 @@ class URL_tube {
     }
 
     /**
-     * Generates a thumbnail image for the video (YouTube only)
+     * Generates a thumbnail image for the video
      */
     function thumbnail() 
     {
-        $s = $this->EE->TMPL->fetch_param('src');
-        if ($this->getVideoSite($s) != 'youtube')
-            return;
+        $src = $this->EE->TMPL->fetch_param('src');
 
-        $vid = $this->getVideoID($s);
-        list($w, $h) = $this->getDimensions($this->EE->TMPL->fetch_param('width'), $this->EE->TMPL->fetch_param('height'));
+        $vid = $this->getVideoID($src);
+        list($width, $height) = $this->getDimensions($this->EE->TMPL->fetch_param('width'), $this->EE->TMPL->fetch_param('height'));
         $sel = $this->makeSelectorString();
+     
+        $site = $this->getVideoSite($src);
+        $url = ($site=='youtube') ? "http://img.youtube.com/vi/$vid/0.jpg" : $this->getVimeoThumbnailUrl($vid, $width);
+        
+        return $url ? "<img src='$url' alt='Video Thumbnail' $sel height='$height' width='$width'/>" : null;
+    }
+    
+    /**
+     * Returns the correct thumbnail URL from the Vimeo API, or false on failure
+     */
+    private function getVimeoThumbnailUrl($video_id, $width)
+    {
+        $api_response = @file_get_contents("http://vimeo.com/api/v2/video/$video_id.php");
+        $video_data = @unserialize(trim($api_response));
 
-        return "<img src='http://img.youtube.com/vi/$vid/0.jpg' alt='Video Thumbnail' $sel height='$h' width='$w'/>";
+        //if the response looks right, decide which size thumbnail to use
+        if (isset($video_data[0])) {
+            if ( $width<=100 ) {
+                return $video_data[0]['thumbnail_small'];
+            } elseif ( $width<=200 ) {
+                return $video_data[0]['thumbnail_medium'];
+            } 
+            return $video_data[0]['thumbnail_large'];
+        }
+        return false;
     }
     
     /**
@@ -302,7 +323,7 @@ class URL_tube {
 
         {exp:url_tube:thumbnail src="http://youtu.be/nU_cOAutCcs" width="585" height="329"}
 
-        Note that this feature ONLY SUPPORTS YOUTUBE VIDEOS, and cannot at this time be used with Vimeo.
+        PERFORMANCE NOTE: This tag works best with YouTube videos. With Vimeo content, using too many of these tags can hurt your page's load time.
 
         ********
         VIDEO ID

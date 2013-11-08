@@ -28,10 +28,10 @@ THUMBNAIL PREVIEW IMAGES
 ************************
 		
 If you don't want to embed the video itself, but only output a thumbnail image for it, you can use the thumbnail tag:
-		
+
 {exp:url_tube:thumbnail src="http://youtu.be/nU_cOAutCcs" width="585" height="329"}
-		
-Note that this feature ONLY SUPPORTS YOUTUBE VIDEOS, and cannot at this time be used with Vimeo.
+
+PERFORMANCE NOTE: This tag works best with YouTube videos. With Vimeo content, using too many of these tags can hurt your page's load time.
 		
 ********
 VIDEO ID
