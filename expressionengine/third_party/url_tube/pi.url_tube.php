@@ -5,7 +5,7 @@ if (!defined('BASEPATH'))
 
 $plugin_info = array(
     'pi_name' => 'URL Tube',
-    'pi_version' => '1.3',
+    'pi_version' => '1.4',
     'pi_author' => 'Mark Spurlock',
     'pi_author_url' => 'https://github.com/Spurlock',
     'pi_description' => 'Using just the URL from a YouTube or Vimeo video, this plugin can create 
