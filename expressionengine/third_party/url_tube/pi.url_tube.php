@@ -127,7 +127,7 @@ class URL_tube {
      */
     private function getVideoSite($src) 
     {
-        $youtube_hosts = array('youtube.com', 'www.youtube.com', 'youtu.be');
+        $youtube_hosts = array('youtube.com', 'www.youtube.com', 'youtu.be', 'youtube.googleapis.com');
         $vimeo_hosts = array('vimeo.com', 'www.vimeo.com');
 
         $host = $this->getVideoHost($src);
@@ -167,11 +167,16 @@ class URL_tube {
                     $vid = $query['v'];
                 } else {
                     //Extract from embed URL
-                    $embedloc = strpos($path, "embed/");
-                    $vid = substr($path, $embedloc + 6);
+                    if ($embedloc = strpos($path, "embed/"))
+                    	$vid = substr($path, $embedloc + 6);
                 }
             }
-
+            
+			if ($vid == NULL)
+			{
+				$vid=basename($src);
+			}
+			
             //Validate and return Video ID
             if ($vid && preg_match('/^[a-zA-Z0-9_\-]{11}$/', $vid)) {
                 return $vid;
