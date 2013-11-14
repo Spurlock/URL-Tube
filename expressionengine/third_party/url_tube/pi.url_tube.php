@@ -199,6 +199,10 @@ class URL_tube {
                 } else {
                     $id_started = false;
                 }
+				if (!$vid && preg_match('/\b[0-9]{4,12}$/', $src, $matches))
+				{
+					$vid = $matches[0];
+				}
             }
 
             if ($vid) {
