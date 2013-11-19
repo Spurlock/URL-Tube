@@ -5,7 +5,7 @@ if (!defined('BASEPATH'))
 
 $plugin_info = array(
     'pi_name' => 'URL Tube',
-    'pi_version' => '1.4',
+    'pi_version' => '1.5',
     'pi_author' => 'Mark Spurlock',
     'pi_author_url' => 'https://github.com/Spurlock',
     'pi_description' => 'Using just the URL from a YouTube or Vimeo video, this plugin can create 
@@ -166,44 +166,60 @@ class URL_tube {
             if ($host == 'youtu.be' && $path) {
                 //Extract from share URL
                 $vid = substr($path, 1);
-            } else if (($host == 'youtube.com' || $host == 'www.youtube.com')) {
-
+            } else if (($host == 'youtube.com' || $host == 'www.youtube.com' || $host == 'youtube.googleapis.com')) {
+                
                 if (isset($segs['query'])) {
                     //Extract from full URL
                     parse_str($segs['query'], $query);
-                    $vid = $query['v'];
-                } else {
+                    if (isset($query['v'])) {
+                        $vid = $query['v'];
+                    }
+                } elseif (strpos($path, "embed/") !== false) {
                     //Extract from embed URL
                     $embedloc = strpos($path, "embed/");
                     $vid = substr($path, $embedloc + 6);
+                } 
+                
+                if (empty($vid)) {
+                    $vid = end( explode('/', $path) );
                 }
             }
 
             //Validate and return Video ID
-            if ($vid && preg_match('/^[a-zA-Z0-9_\-]{11}$/', $vid)) {
-                return $vid;
+            if ($vid && preg_match('/^[a-zA-Z0-9_\-]{11}$/', $vid, $matches)) {
+                return $matches[0];
             } else {
                 return false;
             }
+            
         } else if ($site == 'vimeo') {
+            
             $chars = str_split($path);
             $vid = '';
-            $id_started = false; //flag is set when we start finding numeric characters
-
-            foreach ($chars as $char) {
-                if (preg_match('/^[0-9]{1}$/', $char)) {
-                    if ($id_started) {
-                        $vid .= $char;
+            
+            if (isset($segs['query'])) {
+                //Extract from full URL
+                parse_str($segs['query'], $query);
+                $vid = $query['clip_id'];
+            }
+            
+            if (empty($vid)) {
+                $id_started = false; //flag is set when we start finding numeric characters
+                foreach ($chars as $char) {
+                    if (preg_match('/^[0-9]{1}$/', $char)) {
+                        if ($id_started) {
+                            $vid .= $char;
+                        } else {
+                            $vid = $char;
+                            $id_started = true;
+                        }
                     } else {
-                        $vid = $char;
-                        $id_started = true;
+                        $id_started = false;
                     }
-                } else {
-                    $id_started = false;
                 }
             }
 
-            if ($vid) {
+            if ($vid && is_numeric($vid)) {
                 return $vid;
             } else {
                 return false;
