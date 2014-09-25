@@ -237,7 +237,7 @@ class URL_tube {
         if ($site == 'youtube') {
 
             $valid_attrs = array('autohide', 'autoplay', 'cc_load_policy', 'color', 'controls', 'disablekb', 'enablejsapi', 'end', 'fs',
-                'iv_load_policy', 'list', 'listType', 'loop', 'modestbranding', 'origin', 'playerapiid', 'playlist', 'rel', 'showinfo', 'start', 'theme');
+                'iv_load_policy', 'list', 'listType', 'loop', 'modestbranding', 'origin', 'playerapiid', 'playlist', 'rel', 'showinfo', 'start', 'theme', 'vq');
         } elseif ($site == 'vimeo') {
 
             $valid_attrs = array('title', 'byline', 'portrait', 'color', 'autoplay', 'loop', 'api', 'player_id');
