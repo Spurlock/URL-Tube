@@ -66,6 +66,7 @@ class URL_tube {
     function thumbnail() 
     {
         $src = $this->EE->TMPL->fetch_param('src');
+        $href_only = $this->EE->TMPL->fetch_param('href_only');
 
         $vid = $this->getVideoID($src);
         list($width, $height) = $this->getDimensions($this->EE->TMPL->fetch_param('width'), $this->EE->TMPL->fetch_param('height'));
@@ -74,7 +75,13 @@ class URL_tube {
         $site = $this->getVideoSite($src);
         $url = ($site=='youtube') ? "http://img.youtube.com/vi/$vid/0.jpg" : $this->getVimeoThumbnailUrl($vid, $width);
         
-        return $url ? "<img src='$url' alt='Video Thumbnail' $sel height='$height' width='$width'/>" : null;
+        if (!$url) 
+			return null;
+		else if ($href_only) 
+			return $url;
+		else
+			return "<img src='$url' alt='Video Thumbnail' $sel height='$height' width='$width'/>";
+
     }
     
     /**
