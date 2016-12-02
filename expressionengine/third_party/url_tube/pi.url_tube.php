@@ -60,12 +60,20 @@ class URL_tube {
         return $this->getVideoID($s);
     }
 
+    function get_video_site() 
+    {
+        $s = $this->EE->TMPL->fetch_param('src');
+        $site = $this->getVideoSite($s);
+        return $site;
+    }
+
     /**
      * Generates a thumbnail image for the video
      */
     function thumbnail() 
     {
         $src = $this->EE->TMPL->fetch_param('src');
+        $href_only = $this->EE->TMPL->fetch_param('href_only');
 
         $vid = $this->getVideoID($src);
         list($width, $height) = $this->getDimensions($this->EE->TMPL->fetch_param('width'), $this->EE->TMPL->fetch_param('height'));
@@ -74,7 +82,13 @@ class URL_tube {
         $site = $this->getVideoSite($src);
         $url = ($site=='youtube') ? "http://img.youtube.com/vi/$vid/0.jpg" : $this->getVimeoThumbnailUrl($vid, $width);
         
-        return $url ? "<img src='$url' alt='Video Thumbnail' $sel height='$height' width='$width'/>" : null;
+        if (!$url) 
+			return null;
+		else if ($href_only) 
+			return $url;
+		else
+			return "<img src='$url' alt='Video Thumbnail' $sel height='$height' width='$width'/>";
+
     }
     
     /**
@@ -337,7 +351,7 @@ class URL_tube {
 
         If you don't want to embed the video itself, but only output a thumbnail image for it, you can use the thumbnail tag:
 
-        {exp:url_tube:thumbnail src="http://youtu.be/nU_cOAutCcs" width="585" height="329"}
+        {exp:url_tube:thumbnail src="http://youtu.be/nU_cOAutCcs" width="585" height="329" href_only="yes|no"}
 
         PERFORMANCE NOTE: This tag works best with YouTube videos. With Vimeo content, using too many of these tags can hurt your page's load time.
 
@@ -350,6 +364,16 @@ class URL_tube {
         {exp:url_tube:id src="http://youtu.be/nU_cOAutCcs"}
 
         The above code will simply output "nU_cOAutCcs"
+
+        ********
+        VIDEO SITE
+        ********
+
+		Get video site name either "youtube" or "vimeo"
+
+        {exp:url_tube:get_video_site src="http://youtu.be/nU_cOAutCcs"}
+
+        The above code will output "youtube"
 
         *******
         STYLING
